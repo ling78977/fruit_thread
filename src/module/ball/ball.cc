@@ -73,6 +73,7 @@ BallDetector::BallDetector(const std::string _ball_detect_config,
                        &ball_detect_config_.b_white_upper, 255, NULL);
   }
 }
+
 std::vector<bool> BallDetector::zScore(const std::vector<double>& _stats,
                                        double _ref) {
   double mean = cv::mean(_stats)[0];  // 计算平均值
@@ -96,7 +97,6 @@ std::vector<bool> BallDetector::zScore(const std::vector<double>& _stats,
 
 cv::Mat BallDetector::colorFilter(cv::Mat _img, int _color) {
   cv::Scalar thresh_lower, thresh_upper;
-
   if (_color == 1) {
     cv::cvtColor(_img, _img, cv::COLOR_BGR2HLS);
     thresh_lower = cv::Scalar(ball_detect_config_.h_yellow_lower,
@@ -117,6 +117,7 @@ cv::Mat BallDetector::colorFilter(cv::Mat _img, int _color) {
   cv::inRange(_img, thresh_lower, thresh_upper, _img);
   return _img;
 }
+
 std::vector<cv::Vec3f> BallDetector::findCircle(const cv::Mat& _frame,
                                                 int _color,
                                                 int _circle_number) {
@@ -272,8 +273,9 @@ std::vector<cv::Vec3f> BallDetector::findCircle(const cv::Mat& _frame,
   // std::cout << "dsvsvvds" << std::endl;
   return circles;
 }
-CirclesResult BallDetector::detectCircles(cv::VideoCapture _cam, int _color,
-                                          int _circle_number, bool _grab) {
+
+CirclesResult BallDetector::detectCircles(
+    fruit::detect::DetectPool* _detectpool, int _color, int _circle_number) {
   std::cout << "\n------开始检测圆位置------\n" << std::endl;
   double t0 = cv::getTickCount();  // 初始时间
 
@@ -284,17 +286,10 @@ CirclesResult BallDetector::detectCircles(cv::VideoCapture _cam, int _color,
   std::vector<double> y_table_1;
   std::vector<double> r_table_1;
 
-  std::vector<double> x_table_2;
-  std::vector<double> y_table_2;
-  std::vector<double> r_table_2;
-
-  cv::VideoCapture cap = _cam;  // 开启摄像头
-  // 获取摄像头图像帧
   cv::Mat img;
   while (sample_time <
          sample_times_) {  // 当采样次数小于设定次数时，循环检测采样
     detect_fail = 0;  // 失败时再置位
-
     // 超时退出
     double task_time = (cv::getTickCount() - t0) / cv::getTickFrequency();
     if (!time_out_en_ && task_time >= time_out_) {
@@ -302,56 +297,43 @@ CirclesResult BallDetector::detectCircles(cv::VideoCapture _cam, int _color,
       detect_fail = 1;  // 失败置位
       break;
     }
-    cap >> img;
+    _detectpool->frame_mutex_.lock();
+    img = _detectpool->share_ori_frame_;
+    _detectpool->frame_mutex_.unlock();
     if (img.empty() || cv::waitKey() == 27) {
       continue;
     }
-
     cv::Mat img_clone = img.clone();
-    cv::Mat mask = cv::Mat::zeros(img.size(), CV_8UC3);
-    cv::rectangle(mask, cv::Point((int)img_clone.cols / 3 - 25, 0),
-                  cv::Point((int)img_clone.cols * 2 / 3 + 25, 150),
-                  cv::Scalar(255, 255, 255), -1);
-    cv::rectangle(mask, cv::Point(0, 300),
-                  cv::Point((int)img_clone.cols / 3 + 25, (int)img_clone.rows),
-                  cv::Scalar(255, 255, 255), -1);
-    cv::rectangle(mask, cv::Point((int)img_clone.cols * 2 / 3 - 25, 300),
-                  cv::Point((int)img_clone.cols, (int)img_clone.rows),
-                  cv::Scalar(255, 255, 255), -1);
-    bitwise_and(img_clone, img_clone, img_clone, mask);
+    // cv::Mat mask = cv::Mat::zeros(img.size(), CV_8UC3);
+    // cv::rectangle(mask, cv::Point((int)img_clone.cols / 3 - 25, 0),
+    //               cv::Point((int)img_clone.cols * 2 / 3 + 25, 150),
+    //               cv::Scalar(255, 255, 255), -1);
+    // cv::rectangle(mask, cv::Point(0, 300),
+    //               cv::Point((int)img_clone.cols / 3 + 25,
+    //               (int)img_clone.rows), cv::Scalar(255, 255, 255), -1);
+    // cv::rectangle(mask, cv::Point((int)img_clone.cols * 2 / 3 - 25, 300),
+    //               cv::Point((int)img_clone.cols, (int)img_clone.rows),
+    //               cv::Scalar(255, 255, 255), -1);
+    // bitwise_and(img_clone, img_clone, img_clone, mask);
     std::vector<cv::Vec3f> circles =
         findCircle(img_clone, _color, _circle_number);  // 获取所有圆参数
-    if (circles.empty()) {                              // 为空，跳过
+    try {
+      if (circles.empty() || circles[0][2] == 0 ||
+          (circles.size() != _circle_number)) {  // 为空，跳过
+        continue;
+      }
+    } catch (const std::exception& e) {
       continue;
     }
-    if (circles[0][2] == 0) {  // 半径为0，即未识别到，跳过
-      continue;
-    }
-    int num = circles.size();  // 计圆数
-    if (num != _circle_number) {
-      continue;
-    }
-    if (num == 2) {  // 水平排序
-      std::sort(circles.begin(), circles.end(),
-                [](const cv::Vec3f& p1, const cv::Vec3f& p2) {
-                  return p1[0] < p2[0];
-                });
-    }
+
     sample_time++;  // 采样成功次数更新
     // 记录所有圆
     x_table_1.push_back(circles[0][0]);
     y_table_1.push_back(circles[0][1]);
     r_table_1.push_back(circles[0][2]);
-    if (_grab) {
-      x_table_2.push_back(circles[1][0]);
-      y_table_2.push_back(circles[1][1]);
-      r_table_2.push_back(circles[1][2]);
-    }
-    // 在原图上画圆
-    for (int i = 0; i < num; i++) {
-      cv::circle(img, cv::Point(int(circles[i][0]), int(circles[i][1])),
-                 int(circles[i][2]), cv::Scalar(255, 0, 100), 2);
-    }
+
+    cv::circle(img, cv::Point(int(circles[0][0]), int(circles[0][1])),
+               int(circles[0][2]), cv::Scalar(255, 0, 100), 2);
     if (ball_detect_config_.ball_edit == 1) {
       cv::imshow("circles", img);
       cv::waitKey(100);
@@ -359,25 +341,20 @@ CirclesResult BallDetector::detectCircles(cv::VideoCapture _cam, int _color,
   }
   cv::destroyAllWindows();
   if (detect_fail) {
-    cap.release();
     CirclesResult result;
-    result.circles = {cv::Vec3f(0, 0, 0), cv::Vec3f(0, 0, 0)};
+    result.circles = {cv::Vec3f(0, 0, 0)};
     result.image = img;
     return result;
   } else {
     // 对x数据进行标准化处理(对全部xyr数据进行处理，容易会出现三者相与之后全为false的情况)
     std::vector<bool> x_select_1 =
         zScore(x_table_1, ball_detect_config_.x_select_ref);
-    std::vector<bool> x_select_2 =
-        zScore(x_table_2, ball_detect_config_.x_select_ref);
+
     // x的标准化数据全为false，误差率过大，丢弃
     if (!std::any_of(x_select_1.begin(), x_select_1.end(),
-                     [](bool x) { return x; }) ||
-        !std::any_of(x_select_2.begin(), x_select_2.end(),
                      [](bool x) { return x; })) {
-      cap.release();
       CirclesResult result;
-      result.circles = {cv::Vec3f(0, 0, 0), cv::Vec3f(0, 0, 0)};
+      result.circles = {cv::Vec3f(0, 0, 0)};
       result.image = img;
       return result;
     } else {
@@ -386,71 +363,194 @@ CirclesResult BallDetector::detectCircles(cv::VideoCapture _cam, int _color,
       double y_sum_1 = 0.0;
       double r_sum_1 = 0.0;
       int real_time_1 = 0;
-      double x_sum_2 = 0.0;
-      double y_sum_2 = 0.0;
-      double r_sum_2 = 0.0;
-      int real_time_2 = 0;
+
       for (size_t i = 0; i < x_select_1.size(); i++) {
         if (x_select_1[i]) {
           x_sum_1 += x_table_1[i];
           y_sum_1 += y_table_1[i];
           r_sum_1 += r_table_1[i];
           real_time_1++;
-          x_sum_2 += x_table_2[i];
-          y_sum_2 += y_table_2[i];
-          r_sum_2 += r_table_2[i];
-          real_time_2++;
         }
       }
-      cap.release();
+
       CirclesResult result;
       result.circles[0] =
           cv::Vec3f(int(x_sum_1 / real_time_1), int(y_sum_1 / real_time_1),
                     int(r_sum_1 / real_time_1));
-      result.circles[1] =
-          cv::Vec3f(int(x_sum_2 / real_time_2), int(y_sum_2 / real_time_2),
-                    int(r_sum_2 / real_time_2));
       result.image = img;
       return result;
     }
   }
 }
 
-CirclesResult BallDetector::detectCircles(cv::VideoCapture _cam, int _color) {
+std::vector<cv::Vec3f> BallDetector::calculateStdResults(
+    const std::vector<std::vector<double>>& _x_table,
+    const std::vector<std::vector<double>>& _y_table,
+    const std::vector<std::vector<double>>& _r_table,
+    const std::vector<bool>& _x_select_1, const std::vector<bool>& _x_select_2,
+    const std::vector<bool>& _x_select_3) {
+  double x_sum_1 = 0.0;
+  double y_sum_1 = 0.0;
+  double r_sum_1 = 0.0;
+  int real_time_1 = 0;
+  double x_sum_2 = 0.0;
+  double y_sum_2 = 0.0;
+  double r_sum_2 = 0.0;
+  int real_time_2 = 0;
+  double x_sum_3 = 0.0;
+  double y_sum_3 = 0.0;
+  double r_sum_3 = 0.0;
+  int real_time_3 = 0;
+  for (int i = 0; i < 3; i++) {
+    switch (i) {
+      case 0:
+        for (size_t j = 0; j < _x_select_1.size(); j++) {
+          if (_x_select_1[j]) {
+            x_sum_1 += _x_table[0][j];
+            y_sum_1 += _y_table[0][j];
+            r_sum_1 += _r_table[0][j];
+            real_time_1++;
+          }
+        }
+        break;
+      case 1:
+        for (size_t j = 0; j < _x_select_2.size(); j++) {
+          if (_x_select_2[j]) {
+            x_sum_2 += _x_table[1][j];
+            y_sum_2 += _y_table[1][j];
+            r_sum_2 += _r_table[1][j];
+            real_time_2++;
+          }
+        }
+        break;
+      case 2:
+        for (size_t j = 0; j < _x_select_3.size(); j++) {
+          if (_x_select_3[j]) {
+            x_sum_3 += _x_table[2][j];
+            y_sum_3 += _y_table[2][j];
+            r_sum_3 += _r_table[2][j];
+            real_time_3++;
+          }
+        }
+        break;
+    }
+  }
+  std::vector<cv::Vec3f> caculate_circles(3);
+  caculate_circles[0] =
+      cv::Vec3f(int(x_sum_1 / real_time_1), int(y_sum_1 / real_time_1),
+                int(r_sum_1 / real_time_1));
+
+  caculate_circles[1] =
+      cv::Vec3f(int(x_sum_2 / real_time_2), int(y_sum_2 / real_time_2),
+                int(r_sum_2 / real_time_2));
+  caculate_circles[2] =
+      cv::Vec3f(int(x_sum_3 / real_time_3), int(y_sum_3 / real_time_3),
+                int(r_sum_3 / real_time_3));
+  return caculate_circles;
+}
+
+void BallDetector::standarDizate(std::vector<std::vector<double>>* _x_table,
+                                 std::vector<std::vector<double>>* _y_table,
+                                 std::vector<std::vector<double>>* _r_table,
+                                 std::vector<bool>* _x_select_1,
+                                 std::vector<bool>* _x_select_2,
+                                 std::vector<bool>* _x_select_3) {
+  for (int i = 0; i < 3; i++) {
+    switch (i) {
+      case 0:
+        if ((*_x_table).at(0).size() == 0) {
+          (*_x_select_1).push_back(true);
+          (*_x_table).at(0).push_back(0);
+          (*_y_table).at(0).push_back(0);
+          (*_r_table).at(0).push_back(0);
+        } else {
+          (*_x_select_1) =
+              zScore((*_x_table).at(0), ball_detect_config_.x_select_ref);
+        }
+        break;
+      case 1:
+        if ((*_x_table).at(0).size() == 0) {
+          (*_x_select_2).push_back(true);
+          (*_x_table).at(1).push_back(0);
+          (*_y_table).at(1).push_back(0);
+          (*_r_table).at(1).push_back(0);
+        } else {
+          (*_x_select_2) =
+              zScore((*_x_table).at(1), ball_detect_config_.x_select_ref);
+        }
+        break;
+      case 2:
+        if ((*_x_table).at(2).size() == 0) {
+          // std::cout << x_table[2].size() << std::endl;
+          (*_x_select_3).push_back(true);
+          (*_x_table).at(2).push_back(0);
+          (*_y_table).at(2).push_back(0);
+          (*_r_table).at(2).push_back(0);
+        } else {
+          (*_x_select_3) =
+              zScore((*_x_table).at(2), ball_detect_config_.x_select_ref);
+        }
+        break;
+    }
+  }
+}
+
+void BallDetector::recordXYRParam(std::vector<std::vector<double>>* _x_table,
+                                  std::vector<std::vector<double>>* _y_table,
+                                  std::vector<std::vector<double>>* _r_table,
+                                  cv::Mat* image, int num,
+                                  const std::vector<cv::Vec3f>& circles) {
+  for (int i = 0; i < num; i++) {
+    if ((circles[i][0] < (int(image->cols / 3 + 25))) &&
+        (circles[i][1] > 300)) {
+      // 左下
+      (*_x_table).at(0).push_back(circles[i][0]);
+      (*_y_table).at(0).push_back(circles[i][1]);
+      (*_r_table).at(0).push_back(circles[i][2]);
+    } else if ((circles[i][0] > int(image->cols / 3 - 25)) &&
+               (circles[i][1] < 300)) {
+      // 中上
+      (*_x_table).at(1).push_back(circles[i][0]);
+      (*_y_table).at(1).push_back(circles[i][1]);
+      (*_r_table).at(1).push_back(circles[i][2]);
+    } else if ((circles[i][0] > int(image->cols * 2 / 3 - 25)) &&
+               (circles[i][1] > 300)) {
+      // 右下
+      (*_x_table).at(2).push_back(circles[i][0]);
+      (*_y_table).at(2).push_back(circles[i][1]);
+      (*_r_table).at(2).push_back(circles[i][2]);
+    }
+  }
+}
+
+CirclesResult BallDetector::detectCircles(
+    fruit ::detect::DetectPool* _detectpool, int _color) {
   std::cout << "\n------开始检测圆位置------\n" << std::endl;
   double t0 = cv::getTickCount();  // 初始时间
 
   int detect_fail = 0;  // 初始化检测失败标志位
   int sample_time = 0;  // 初始化采样次数为0
   // 初始化数据记录表为空
-  std::vector<std::vector<double>> x_table;
-  std::vector<std::vector<double>> y_table;
-  std::vector<std::vector<double>> r_table;
-  x_table.resize(3);
-  y_table.resize(3);
-  r_table.resize(3);
-
-  cv::VideoCapture cap = _cam;  // 开启摄像头
-  // 获取摄像头图像帧
+  std::vector<std::vector<double>> x_table(3);
+  std::vector<std::vector<double>> y_table(3);
+  std::vector<std::vector<double>> r_table(3);
+  // 获取图像帧
   cv::Mat img;
-  while (sample_time <
-         sample_times_) {  // 当采样次数小于设定次数时，循环检测采样
-    detect_fail = 0;  // 失败时再置位
-
+  while (sample_time < sample_times_) {
+    detect_fail = 0;
     // 超时退出
     double task_time = (cv::getTickCount() - t0) / cv::getTickFrequency();
-    // std::cout << "采样次数：" << sample_time << std::endl;
-    // std::cout << "task_time：" << task_time << std::endl;
     if (!time_out_en_ && task_time >= time_out_) {
       std::cout << "\n超时未检测到圆\n" << std::endl;
       detect_fail = 1;  // 失败置位
       break;
     }
-    cap >> img;
+    _detectpool->frame_mutex_.lock();
+    img = _detectpool->share_ori_frame_;
+    _detectpool->frame_mutex_.unlock();
     if (img.empty() || cv::waitKey(30) == 27) {
       continue;
     }
-
     cv::Mat img_clone = img.clone();
     cv::Mat mask = cv::Mat::zeros(img.size(), CV_8UC3);
     cv::rectangle(mask, cv::Point((int)img_clone.cols / 3 - 25, 0),
@@ -463,45 +563,15 @@ CirclesResult BallDetector::detectCircles(cv::VideoCapture _cam, int _color) {
                   cv::Point((int)img_clone.cols, (int)img_clone.rows),
                   cv::Scalar(255, 255, 255), -1);
     bitwise_and(mask, img_clone, img_clone);
-    // cv::imshow("aaa", img_clone);
-    // cv::waitKey(0);
-    // std::cout << "ddddd" << std::endl;
     std::vector<cv::Vec3f> circles = findCircle(img_clone, _color);
     // 获取所有圆，个数不确定，最多为三个
-
-    // find_circle(img_clone, _color, _circle_number);  // 获取所有圆参数
     if (circles.empty() || circles[0][2] == 0) {  // 为空，跳过
       continue;
     }
     int num = circles.size();  // 计圆数
-    // std::cout << "num:" << num << std::endl;
     if (num > 0) {
       sample_time++;
-      // 记录参数
-
-      for (int i = 0; i < num; i++) {
-        if ((circles[i][0] < (int(img_clone.cols / 3 + 25))) &&
-            (circles[i][1] > 300)) {
-          // 左下
-          // std::cout << circles[i][0] << std::endl;
-          x_table.at(0).push_back(circles[i][0]);
-          y_table[0].push_back(circles[i][1]);
-          r_table[0].push_back(circles[i][2]);
-        } else if ((circles[i][0] > int(img_clone.cols / 3 - 25)) &&
-                   (circles[i][1] < 300)) {
-          // 中上
-
-          x_table[1].push_back(circles[i][0]);
-          y_table[1].push_back(circles[i][1]);
-          r_table[1].push_back(circles[i][2]);
-        } else if ((circles[i][0] > int(img_clone.cols * 2 / 3 - 25)) &&
-                   (circles[i][1] > 300)) {
-          // 右下
-          x_table[2].push_back(circles[i][0]);
-          y_table[2].push_back(circles[i][1]);
-          r_table[2].push_back(circles[i][2]);
-        }
-      }
+      recordXYRParam(&x_table, &y_table, &r_table, &img_clone, num, circles);
       // 在原图上画圆
       for (int i = 0; i < num; i++) {
         cv::circle(img, cv::Point(int(circles[i][0]), int(circles[i][1])),
@@ -515,154 +585,41 @@ CirclesResult BallDetector::detectCircles(cv::VideoCapture _cam, int _color) {
   }
   cv::destroyAllWindows();
   if (detect_fail == 1) {
-    cap.release();
     CirclesResult result;
     result.circles = {cv::Vec3f(0, 0, 0), cv::Vec3f(0, 0, 0),
                       cv::Vec3f(0, 0, 0)};
     result.image = img;
     return result;
   } else {
-    // 对x数据进行标准化处理(对全部xyr数据进行处理，容易会出现三者相与之后全为false的情况)
+    // 对x数据进行Standardization(对全部xyr数据进行处理，容易会出现三者相与之后全为false的情况)
     std::vector<bool> x_select_1, x_select_2, x_select_3;
-
-    for (int i = 0; i < 3; i++) {
-      switch (i) {
-        case 0:
-
-          if (x_table[0].size() == 0) {
-            x_select_1.push_back(true);
-            x_table[0].push_back(0);
-            y_table[0].push_back(0);
-            r_table[0].push_back(0);
-          } else {
-            x_select_1 = zScore(x_table[0], ball_detect_config_.x_select_ref);
-            // for (int i = 0; i < x_select_1.size(); i++) {
-            //   std::cout << "x_select_1[" << i << "]:" << x_select_1[i]
-            //             << std::endl;
-            // }
-          }
-          break;
-        case 1:
-          if (x_table[1].size() == 0) {
-            x_select_2.push_back(true);
-            x_table[1].push_back(0);
-            y_table[1].push_back(0);
-            r_table[1].push_back(0);
-          } else {
-            x_select_2 = zScore(x_table[1], ball_detect_config_.x_select_ref);
-            // for (int i = 0; i < x_select_2.size(); i++) {
-            //   std::cout << "x_select_2[" << i << "]:" << x_select_2[i]
-            //             << std::endl;
-            // }
-          }
-          break;
-        case 2:
-          if (x_table[2].size() == 0) {
-            // std::cout << x_table[2].size() << std::endl;
-            x_select_3.push_back(true);
-            x_table[2].push_back(0);
-            y_table[2].push_back(0);
-            r_table[2].push_back(0);
-          } else {
-            x_select_3 = zScore(x_table[2], ball_detect_config_.x_select_ref);
-            // for (int i = 0; i < x_select_3.size(); i++) {
-            //   std::cout << "x_select_3[" << i << "]:" << x_select_3[i]
-            //             << std::endl;
-            // }
-          }
-          break;
-      }
-    }
-
+    standarDizate(&x_table, &y_table, &r_table, &x_select_1, &x_select_2,
+                  &x_select_3);
     // x的标准化数据全为false，误差率过大，丢弃
-    // std::cout << std::any_of(x_select_3.begin(), x_select_3.end(), [](bool x)
-    // {
-    //   return x;
-    // }) << std::endl;
+
     if (!std::any_of(x_select_1.begin(), x_select_1.end(),
                      [](bool x) { return x; }) ||
         !std::any_of(x_select_2.begin(), x_select_2.end(),
                      [](bool x) { return x; }) ||
         !std::any_of(x_select_3.begin(), x_select_3.end(),
                      [](bool x) { return x; })) {
-      cap.release();
       CirclesResult result;
       result.circles = {cv::Vec3f(0, 0, 0), cv::Vec3f(0, 0, 0),
                         cv::Vec3f(0, 0, 0)};
       result.image = img;
       return result;
     } else {
-      // 计算标准化结果为true(排除坏点干扰)的数据的平均值
-      double x_sum_1 = 0.0;
-      double y_sum_1 = 0.0;
-      double r_sum_1 = 0.0;
-      int real_time_1 = 0;
-      double x_sum_2 = 0.0;
-      double y_sum_2 = 0.0;
-      double r_sum_2 = 0.0;
-      int real_time_2 = 0;
-      double x_sum_3 = 0.0;
-      double y_sum_3 = 0.0;
-      double r_sum_3 = 0.0;
-      int real_time_3 = 0;
-      for (int i = 0; i < 3; i++) {
-        switch (i) {
-          case 0:
-            for (size_t j = 0; j < x_select_1.size(); j++) {
-              if (x_select_1[j]) {
-                x_sum_1 += x_table[0][j];
-                y_sum_1 += y_table[0][j];
-                r_sum_1 += r_table[0][j];
-                real_time_1++;
-              }
-            }
-
-            break;
-          case 1:
-            for (size_t j = 0; j < x_select_2.size(); j++) {
-              if (x_select_2[j]) {
-                x_sum_2 += x_table[1][j];
-                y_sum_2 += y_table[1][j];
-                r_sum_2 += r_table[1][j];
-                real_time_2++;
-              }
-            }
-            break;
-          case 2:
-            for (size_t j = 0; j < x_select_3.size(); j++) {
-              if (x_select_3[j]) {
-                x_sum_3 += x_table[2][j];
-                y_sum_3 += y_table[2][j];
-                r_sum_3 += r_table[2][j];
-                real_time_3++;
-              }
-            }
-
-            break;
-        }
-      }
-
-      cap.release();
+      // Calculate standardization results为true(排除坏点干扰)的数据的平均值
       CirclesResult result;
-      result.circles.resize(3);
-      result.circles[0] =
-          cv::Vec3f(int(x_sum_1 / real_time_1), int(y_sum_1 / real_time_1),
-                    int(r_sum_1 / real_time_1));
-
-      result.circles[1] =
-          cv::Vec3f(int(x_sum_2 / real_time_2), int(y_sum_2 / real_time_2),
-                    int(r_sum_2 / real_time_2));
-      result.circles[2] =
-          cv::Vec3f(int(x_sum_3 / real_time_3), int(y_sum_3 / real_time_3),
-                    int(r_sum_3 / real_time_3));
+      result.circles = calculateStdResults(x_table, y_table, r_table,
+                                           x_select_1, x_select_2, x_select_3);
       result.image = img;
-
       return result;
     }
   }
 }
 
-TypeResult BallDetector::detectType(cv::VideoCapture _cap) {
+TypeResult BallDetector::detectType(fruit::detect::DetectPool* _detectpool) {
   double best_match = 0.0;  // 初始化最佳匹配的种类的相似度
   int fruit_type = 0;       // 初始化水果种类为0(为0即识别失败)
   cv::Point left_top(0, 0);  // 初始化最佳匹配左上角点位置(画边界框时使用)
@@ -678,7 +635,7 @@ TypeResult BallDetector::detectType(cv::VideoCapture _cap) {
       break;
     }
     // 先检测圆所在的位置，目的在于将圆区域提取出来，尽可能地排除背景干扰
-    CirclesResult result = detectCircles(_cap, 1, 1, false);
+    CirclesResult result = detectCircles(_detectpool, 1, 1);
     cv::Vec3f circle = result.circles[0];
     cv::Mat img = result.image;
 
@@ -765,12 +722,14 @@ TypeResult BallDetector::detectType(cv::VideoCapture _cap) {
   result.fruit_type = fruit_type;
   result.similarity = similarity;
 }
+
 int BallDetector::checkGrab(int _cam, int _color) {
   /**
    * 用不上
    */
   return 0;
 }
+
 BallDetector::~BallDetector() {}
 }  // namespace ball
 }  // namespace fruit

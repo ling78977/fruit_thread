@@ -7,6 +7,8 @@
 #include <thread>
 #include <vector>
 
+#include "src/module/ball/ball.h"
+
 namespace fruit {
 namespace detect {
 
@@ -54,7 +56,9 @@ typedef struct {
 
 class DetectPool {
  public:
-  DetectPool(const std::string detect_config,  int qr_timeout, bool qr_timeout_en,int trun_timeout,bool turn_timeout_en,int turn_sample_times);
+  DetectPool(const std::string detect_config, int qr_timeout,
+             bool qr_timeout_en, int trun_timeout, bool turn_timeout_en,
+             int turn_sample_times);
 
   ~DetectPool();
 
@@ -113,6 +117,7 @@ class DetectPool {
   cv::Mat detectTurnPre(cv::Mat frame);
 
  private:
+  friend class fruit::ball::BallDetector;
   cv::Mat share_ori_frame_;
   std::mutex frame_mutex_;
   DetectQRConfig detect_qr_config_;

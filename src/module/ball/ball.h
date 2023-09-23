@@ -1,10 +1,11 @@
 #ifndef SRC_MODULE_BALL_BALL_H_
 #define SRC_MODULE_BALL_BALL_H_
 
-
-//TODO 把检测球的动作函数改为从DETECTPOLL中的属性
+// TODO 把检测球的动作函数改为从DETECTPOLL中的属性
 #include <iostream>
 #include <opencv2/opencv.hpp>
+
+#include "src/module/detect/detect.h"
 namespace fruit {
 namespace ball {
 
@@ -81,10 +82,17 @@ class BallDetector {
    */
   std::vector<bool> zScore(const std::vector<double>& _stats, double _ref);
 
+  /**
+   * @brief 过滤颜色
+   *
+   * @param _img 图像帧
+   * @param _color 黄色为1,白色为0
+   * @return cv::Mat
+   */
   cv::Mat colorFilter(cv::Mat _img, int _color);
 
   /**
-   *@brief 在bgr图上上找到目标数量个目标颜色的圆(即乒乓球)，得到其圆参数
+   *@brief 当寻找放置区黄色牌子的时候执行
    *@param _frame 图像帧
    *@param _color: 目标颜色
    *@param _circle_number: 当前树上应有目标颜色的果的数量
@@ -92,19 +100,74 @@ class BallDetector {
    */
   std::vector<cv::Vec3f> findCircle(const cv::Mat& _frame, int _color,
                                     int _circle_number);
-
-  std::vector<cv::Vec3f> findCircle(const cv::Mat& _frame, int _color);
   /**
-   *@brief
-   *实时检测视野内指定数量个指定颜色的圆，并多次采样求平均提高定位精度，返回最左侧的一个圆的参数
+   * @brief 寻找果树黄色球时使用
+   *
+   * @param _frame 图像帧
+   * @param _color 黄色 1
+   * @return std::vector<cv::Vec3f> 找到的圆参数
+   */
+  std::vector<cv::Vec3f> findCircle(const cv::Mat& _frame, int _color);
+
+  /**
+   *@brief 检测原型，放置区检测防治牌
    *@param _cam  摄像头
    *@param _color  目标颜色
    *@param _circle_number  当前树上应有目标颜色的果的数量
    *@return 最终圆参数和图像帧
    */
-  CirclesResult detectCircles(cv::VideoCapture _cam, int _color,
-                              int _circle_number, bool _grab = true);
+  CirclesResult detectCircles(fruit::detect::DetectPool* _detectpool,
+                              int _color, int _circle_number);
 
+  /**
+   * @brief 计算标准差结果
+   *
+   * @param _x_table
+   * @param _y_table
+   * @param _r_table
+   * @param _x_select_1
+   * @param _x_select_2
+   * @param _x_select_3
+   * @return std::vector<cv::Vec3f>
+   */
+  std::vector<cv::Vec3f> calculateStdResults(
+      const std::vector<std::vector<double>>& _x_table,
+      const std::vector<std::vector<double>>& _y_table,
+      const std::vector<std::vector<double>>& _r_table,
+      const std::vector<bool>& _x_select_1,
+      const std::vector<bool>& _x_select_2,
+      const std::vector<bool>& _x_select_3);
+  /**
+   * @brief 记录xyr参数
+   *
+   * @param _x_table
+   * @param _y_table
+   * @param _r_table
+   * @param image
+   * @param num
+   * @param circles
+   */
+  void recordXYRParam(std::vector<std::vector<double>>* _x_table,
+                      std::vector<std::vector<double>>* _y_table,
+                      std::vector<std::vector<double>>* _r_table,
+                      cv::Mat* image, int num,
+                      const std::vector<cv::Vec3f>& circles);
+  /**
+   * @brief 标准差处理
+   *
+   * @param _x_table
+   * @param _y_table
+   * @param _r_table
+   * @param _x_select_1
+   * @param _x_select_2
+   * @param _x_select_3
+   */
+  void standarDizate(std::vector<std::vector<double>>* _x_table,
+                     std::vector<std::vector<double>>* _y_table,
+                     std::vector<std::vector<double>>* _r_table,
+                     std::vector<bool>* _x_select_1,
+                     std::vector<bool>* _x_select_2,
+                     std::vector<bool>* _x_select_3);
   /**
    *@brief
    *实时检测视野内指定数量个指定颜色的圆，并多次采样求平均提高定位精度，返回最左侧的一个圆的参数
@@ -112,13 +175,14 @@ class BallDetector {
    *@param _color  目标颜色
    *@return 最终圆参数和图像帧
    */
-  CirclesResult detectCircles(cv::VideoCapture _cam, int _color);
+  CirclesResult detectCircles(fruit::detect::DetectPool* _detectpool,
+                              int _color);
 
   /**
    *@brief 根据所在区域，实时识别视野内对应个数的黄色圆上的贴纸种类
    *@param cap: 摄像头
    */
-  TypeResult detectType(cv::VideoCapture _cap);
+  TypeResult detectType(fruit::detect::DetectPool* _detectpool);
   int checkGrab(int _cam, int _color);
   BallDetector(const std::string _ball_detect_config, int _sample_times,
                int _time_out, bool _time_out_en);
