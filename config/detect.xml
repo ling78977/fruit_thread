@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<opencv_storage>
+    <!-- 0 不调试
+         1 调试
+     -->
+    <QR_EDIT>0</QR_EDIT>
+
+    <!-- detect_turn -->
+    <!-- hsv蓝色参数 -->
+    <H_BLUE_MIN>96</H_BLUE_MIN>
+    <H_BLUE_MAX>160</H_BLUE_MAX>
+    <S_BLUE_MIN>130</S_BLUE_MIN>
+    <S_BLUE_MAX>255</S_BLUE_MAX>
+    <V_BLUE_MIN>30</V_BLUE_MIN>
+    <V_BLUE_MAX>255</V_BLUE_MAX>
+
+    <!-- 形态学闭操作的卷积核大小 -->
+
+    <MORPHOLOGRAY_KERNEL_SIZE_TURN>5</MORPHOLOGRAY_KERNEL_SIZE_TURN>
+
+    <!-- 腐蚀时的卷积核大小 -->
+    <ERODE_DILATE_KERNEL_SIZE_TURN>3</ERODE_DILATE_KERNEL_SIZE_TURN>
+
+    <!-- 腐蚀操作迭代次数 -->
+    <ERODE_ITERATIONS_TURN>3</ERODE_ITERATIONS_TURN>
+
+    <!-- 膨胀操作迭代次数 -->
+    <DILATE_ITERATIONS_TURN>5</DILATE_ITERATIONS_TURN>
+
+    <!-- 标志面积最小阈值 -->
+    <AREA_THRESHOLD>30000</AREA_THRESHOLD>
+
+    <!-- 相似度最低阈值 -->
+    <MAX_VAL_THRESHOLD>0.3</MAX_VAL_THRESHOLD>
+
+    <TURN_EDIT>1</TURN_EDIT>
+
+</opencv_storage>

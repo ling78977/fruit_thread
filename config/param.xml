@@ -1,0 +1,138 @@
+<opencv_storage>
+    <!-- detect_turn -->
+    <!-- hsv蓝色参数 -->
+    <H_BLUE_MIN>96</H_BLUE_MIN>
+    <H_BLUE_MAX>160</H_BLUE_MAX>
+    <S_BLUE_MIN>130</S_BLUE_MIN>
+    <S_BLUE_MAX>255</S_BLUE_MAX>
+    <V_BLUE_MIN>30</V_BLUE_MIN>
+    <V_BLUE_MAX>255</V_BLUE_MAX>
+
+    <!-- 形态学闭操作的卷积核大小 -->
+    <MORPHOLOGRAY_KERNEL_SIZE_TURN_1>5</MORPHOLOGRAY_KERNEL_SIZE_TURN_1>
+    <MORPHOLOGRAY_KERNEL_SIZE_TURN_2>5</MORPHOLOGRAY_KERNEL_SIZE_TURN_2>
+
+    <!-- 腐蚀时的卷积核大小 -->
+    <ERODE_DILATE_KERNEL_SIZE_TURN_1>3</ERODE_DILATE_KERNEL_SIZE_TURN_1>
+    <ERODE_DILATE_KERNEL_SIZE_TURN_2>3</ERODE_DILATE_KERNEL_SIZE_TURN_2>
+
+    <!-- 腐蚀操作迭代次数 -->
+    <ERODE_ITERATIONS_TURN>3</ERODE_ITERATIONS_TURN>
+
+    <!-- 膨胀操作迭代次数 -->
+    <DILATE_ITERATIONS_TURN>5</DILATE_ITERATIONS_TURN>
+
+    <!-- 标志面积最小阈值 -->
+    <AREA_THRESHOLD>30000</AREA_THRESHOLD>
+
+    <!-- 相似度最低阈值 -->
+    <MAX_VAL_THRESHOLD>0.3</MAX_VAL_THRESHOLD>
+
+
+    <!-- detect_ball -->
+    <H_YELLOW_LOWER>0</H_YELLOW_LOWER>
+    <H_YELLOW_UPPER>30</H_YELLOW_UPPER>
+    <L_YELLOW_LOWER>90</L_YELLOW_LOWER>
+    <L_YELLOW_UPPER>255</L_YELLOW_UPPER>
+    <S_YELLOW_LOWER>160</S_YELLOW_LOWER>
+    <S_YELLOW_UPPER>255</S_YELLOW_UPPER>
+
+    <R_WHITE_LOWER>220</R_WHITE_LOWER>
+    <R_WHITE_UPPER>255</R_WHITE_UPPER>
+    <G_WHITE_LOWER>220</G_WHITE_LOWER>
+    <G_WHITE_UPPER>255</G_WHITE_UPPER>
+    <B_WHITE_LOWER>230</B_WHITE_LOWER>
+    <B_WHITE_UPPER>255</B_WHITE_UPPER>
+
+    <!-- 形态学闭操作卷积核大小 -->
+    <MORPHOLOGRAY_KERNEL_SIZE_BALL_1>5</MORPHOLOGRAY_KERNEL_SIZE_BALL_1>
+    <MORPHOLOGRAY_KERNEL_SIZE_BALL_2>5</MORPHOLOGRAY_KERNEL_SIZE_BALL_2>
+
+    <!-- 形态学腐蚀操作卷积核大小 -->
+    <ERODE_DILATE_KERNEL_SIZE_BALL_1>3</ERODE_DILATE_KERNEL_SIZE_BALL_1>
+    <ERODE_DILATE_KERNEL_SIZE_BALL_2>3</ERODE_DILATE_KERNEL_SIZE_BALL_2>
+
+    <!-- 腐蚀操作迭代次数 -->
+    <ERODE_ITERATIONS_BALL>3</ERODE_ITERATIONS_BALL>
+
+    <!--膨胀操作迭代次数 -->
+    <DILATE_ITERATIONS_BALL>5</DILATE_ITERATIONS_BALL>
+
+    <!-- candy最小阈值 -->
+    <CANNY_THRESHOLD1>10</CANNY_THRESHOLD1>
+    <CANNY_THRESHOLD2>10</CANNY_THRESHOLD2>
+
+    <!-- 霍夫圆参数2 -->
+    <HOUGHCIRCLES_PARAM2>18</HOUGHCIRCLES_PARAM2>
+
+    <!-- 霍夫圆最小半径 -->
+    <RMIN>30</RMIN>
+
+    <!-- 霍夫圆最大半径 -->
+    <RMAX>90</RMAX>
+
+    <!-- 最小半径自适应的上限 -->
+    <RMIN_THRESHOLD>86</RMIN_THRESHOLD>
+
+    <!-- 数据标准化参考值 -->
+    <X_SELECT_REF>0.8</X_SELECT_REF>
+
+    <!-- 模板库中每个种类包含的模板张数 -->
+    <N_PIC_PER_TYPE>3</N_PIC_PER_TYPE>
+
+    <!-- 检查抓取情况时的兴趣域 [top bottom left right]  h20*w50，根据自己设备夹取到球时的实际情况自行修改 -->
+    <!-- 暂时不需要 -->
+
+    <!--  兴趣域内兴趣颜色像素点占比-->
+    <RATIO>0.7</RATIO>
+
+
+    <!-- arm_coord_2_claw -->
+    <PI>3.1415926</PI>
+    <DE2RA>0.01745329251994329576923690768489</DE2RA>
+    <RA2DE>57.295779513082320876798154814105</RA2DE>
+
+    <!-- 底座坐标系下相机位置参数 单位cm  -->
+    <X_CAMERA_TO_BASE>0.0</X_CAMERA_TO_BASE> <!--粗调水平中心位置，偏左（即左夹右夹均偏左）调小-->
+    <Y_CAMERA_TO_BASE>3.7</Y_CAMERA_TO_BASE>
+    <Z_CAMERA_TO_BASE>24.8</Z_CAMERA_TO_BASE> <!--粗调垂直中心位置，偏上（即上夹下夹均偏上）调小-->
+
+    <!-- 底座坐标系下乒乓球球心到相机镜头光心的距离 单位cm -->
+    <D_OBJECT_TO_CAMERA_UPPER>24.5</D_OBJECT_TO_CAMERA_UPPER>
+    <D_OBJECT_TO_CAMERA_LOWER>27.5</D_OBJECT_TO_CAMERA_LOWER>
+
+    <!-- 相机内参矩阵参数 -->
+    <F_X_DIV_DX>680.0</F_X_DIV_DX> <!--水平缩放，偏大（即左夹偏左，右夹偏右）调大-->
+    <F_Y_DIV_DY>680.0</F_Y_DIV_DY> <!--垂直缩放，偏大（即上夹偏上，下夹偏下）调大-->
+    <U0>320.0</U0> <!--精调水平中心位置，偏左（即左夹右夹均偏左）调小-->
+    <V0>240.0</V0> <!--精调垂直中心位置，偏上（即上夹下夹均偏上）调小-->
+
+    <!-- 夹爪参数 单位cm -->
+    <J5_CLAW_DELTA_Y>8.5</J5_CLAW_DELTA_Y>
+    <J5_CLAW_DELTA_Z>1.15</J5_CLAW_DELTA_Z>
+
+    <!-- 上下层乒乓球在像素平面上的水平分界线 -->
+    <SIGHT_MIDDLE>175</SIGHT_MIDDLE>
+
+
+    <!-- basic -->
+    <YELLOW>1</YELLOW>
+    <WHITE>0</WHITE>
+
+    <ARM_LEFT>180</ARM_LEFT>
+    <ARM_MIDDLE>90</ARM_MIDDLE>
+    <ARM_RIGHT>0</ARM_RIGHT>
+
+    <turn_left>a</TURN_LEFT>
+    <turn_right>d</TURN_RIGHT>
+    <DRIVE_AHEAD>w</DRIVE_AHEAD>
+    <DRIVE_BACK>s</DRIVE_BACK>
+
+    <tight>90</TIGHT>
+    <loose>30</LOOSE>
+
+    <DELTA_YAW_SERVO_1>0</DELTA_YAW_SERVO_1> <!--待命位调水平时的1号舵机偏差角度，实际偏左为负值-->
+    <LEVEL_SERVO_2>180</LEVEL_SERVO_2> <!--待命位调水平时的2号舵机角度-->
+    <LEVEL_SERVO_3>0</LEVEL_SERVO_3> <!--待命位调水平时的3号舵机角度-->
+    <LEVEL_SERVO_4>0</LEVEL_SERVO_4> <!--待命位调水平时的4号舵机角度-->
+</opencv_storage>

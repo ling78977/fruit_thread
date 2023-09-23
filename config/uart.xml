@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<opencv_storage>
+    <!-- 0 不调试
+         1 调试
+     -->
+    <EDIT>1</EDIT>
+
+    <PORT_NAME>/dev/CH340</PORT_NAME>
+    <BAUD_RATE>1</BAUD_RATE>
+
+</opencv_storage>

@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<opencv_storage>
+    <!-- detect_ball -->
+    <H_YELLOW_LOWER>0</H_YELLOW_LOWER>
+    <H_YELLOW_UPPER>170</H_YELLOW_UPPER>
+    <L_YELLOW_LOWER>27</L_YELLOW_LOWER>
+    <L_YELLOW_UPPER>255</L_YELLOW_UPPER>
+    <S_YELLOW_LOWER>180</S_YELLOW_LOWER>
+    <S_YELLOW_UPPER>255</S_YELLOW_UPPER>
+
+    <R_WHITE_LOWER>220</R_WHITE_LOWER>
+    <R_WHITE_UPPER>255</R_WHITE_UPPER>
+    <G_WHITE_LOWER>220</G_WHITE_LOWER>
+    <G_WHITE_UPPER>255</G_WHITE_UPPER>
+    <B_WHITE_LOWER>230</B_WHITE_LOWER>
+    <B_WHITE_UPPER>255</B_WHITE_UPPER>
+
+    <!-- 形态学闭操作卷积核大小 -->
+    <MORPHOLOGRAY_KERNEL_SIZE_BALL>5</MORPHOLOGRAY_KERNEL_SIZE_BALL>
+ 
+    <!-- 形态学腐蚀操作卷积核大小 -->
+    <ERODE_DILATE_KERNEL_SIZE_BALL>3</ERODE_DILATE_KERNEL_SIZE_BALL>
+
+    <!-- 腐蚀操作迭代次数 -->
+    <ERODE_ITERATIONS_BALL>3</ERODE_ITERATIONS_BALL>
+
+    <!--膨胀操作迭代次数 -->
+    <DILATE_ITERATIONS_BALL>5</DILATE_ITERATIONS_BALL>
+
+    <!-- candy最小阈值 -->
+    <CANNY_THRESHOLD1>10</CANNY_THRESHOLD1>
+    <CANNY_THRESHOLD2>10</CANNY_THRESHOLD2>
+
+    <!-- 霍夫圆参数2 -->
+    <HOUGHCIRCLES_PARAM2>16</HOUGHCIRCLES_PARAM2>
+
+    <!-- 霍夫圆最小半径 -->
+    <RMIN>30</RMIN>
+
+    <!-- 霍夫圆最大半径 -->
+    <RMAX>90</RMAX>
+
+    <!-- 最小半径自适应的上限 -->
+    <RMIN_THRESHOLD>86</RMIN_THRESHOLD>
+
+    <!-- 数据标准化参考值 -->
+    <X_SELECT_REF>0.8</X_SELECT_REF>
+
+    <!-- 模板库中每个种类包含的模板张数 -->
+    <N_PIC_PER_TYPE>4</N_PIC_PER_TYPE>
+
+    <!-- 检查抓取情况时的兴趣域 [top bottom left right]  h20*w50，根据自己设备夹取到球时的实际情况自行修改 -->
+    <!-- 暂时不需要 -->
+
+    <!--  兴趣域内兴趣颜色像素点占比-->
+    <RATIO>0.7</RATIO>
+
+    <BALL_EDIT>1</BALL_EDIT>
+</opencv_storage>

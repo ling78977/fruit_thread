@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<opencv_storage>
+    <!-- arm_coord_2_claw -->
+    <PI>3.1415926</PI>
+    <DE2RA>0.01745329251994329576923690768489</DE2RA>
+    <RA2DE>57.295779513082320876798154814105</RA2DE>
+
+    <!-- 底座坐标系下相机位置参数 单位cm  -->
+    <X_CAMERA_TO_BASE_L>-1.5</X_CAMERA_TO_BASE_L> <!--粗调水平中心位置，偏左（即左夹右夹均偏左）调小-->
+    <Y_CAMERA_TO_BASE_L>3</Y_CAMERA_TO_BASE_L>
+    <Z_CAMERA_TO_BASE_L>16.5</Z_CAMERA_TO_BASE_L> <!--粗调垂直中心位置，偏上（即上夹下夹均偏上）调小-->
+
+    <X_CAMERA_TO_BASE_M>-1</X_CAMERA_TO_BASE_M> <!--粗调水平中心位置，偏左（即左夹右夹均偏左）调小-->
+    <Y_CAMERA_TO_BASE_M>3</Y_CAMERA_TO_BASE_M>
+    <Z_CAMERA_TO_BASE_M>17.6</Z_CAMERA_TO_BASE_M> <!--粗调垂直中心位置，偏上（即上夹下夹均偏上）调小-->
+
+    <X_CAMERA_TO_BASE_R>-1.1</X_CAMERA_TO_BASE_R> <!--粗调水平中心位置，偏左（即左夹右夹均偏左）调小-->
+    <Y_CAMERA_TO_BASE_R>3</Y_CAMERA_TO_BASE_R>
+    <Z_CAMERA_TO_BASE_R>16</Z_CAMERA_TO_BASE_R> <!--粗调垂直中心位置，偏上（即上夹下夹均偏上）调小-->
+
+    <!-- 底座坐标系下乒乓球球心到相机镜头光心的距离 单位cm -->
+    <D_OBJECT_TO_CAMERA_UPPER>12</D_OBJECT_TO_CAMERA_UPPER>
+    <D_OBJECT_TO_CAMERA_LOWER>17.5</D_OBJECT_TO_CAMERA_LOWER>
+
+    <!-- 相机内参矩阵参数 -->
+    <F_X_DIV_DX_L>720.0</F_X_DIV_DX_L> <!--水平缩放，偏大（即左夹偏左，右夹偏右）调大-->
+    <F_Y_DIV_DY_L>735.0</F_Y_DIV_DY_L> <!--垂直缩放，偏大（即上夹偏上，下夹偏下）调大-->
+    <U0_L>370.0</U0_L> <!--精调水平中心位置，偏左（即左夹右夹均偏左）调小-->
+    <V0_L>250.0</V0_L> <!--精调垂直中心位置，偏上（即上夹下夹均偏上）调小-->
+
+    <F_X_DIV_DX_M>720.0</F_X_DIV_DX_M> <!--水平缩放，偏大（即左夹偏左，右夹偏右）调大-->
+    <F_Y_DIV_DY_M>730.0</F_Y_DIV_DY_M> <!--垂直缩放，偏大（即上夹偏上，下夹偏下）调大-->
+    <U0_M>380.0</U0_M> <!--精调水平中心位置，偏左（即左夹右夹均偏左）调小-->
+    <V0_M>225.0</V0_M> <!--精调垂直中心位置，偏上（即上夹下夹均偏上）调小-->
+
+    <F_X_DIV_DX_R>720.0</F_X_DIV_DX_R> <!--水平缩放，偏大（即左夹偏左，右夹偏右）调大-->
+    <F_Y_DIV_DY_R>730.0</F_Y_DIV_DY_R> <!--垂直缩放，偏大（即上夹偏上，下夹偏下）调大-->
+    <U0_R>360.0</U0_R> <!--精调水平中心位置，偏左（即左夹右夹均偏左）调小-->
+    <V0_R>240.0</V0_R> <!--精调垂直中心位置，偏上（即上夹下夹均偏上）调小-->
+
+
+    <!-- 夹爪参数 单位cm -->
+    <J5_CLAW_DELTA_Y>8</J5_CLAW_DELTA_Y>
+    <J5_CLAW_DELTA_Z>1.15</J5_CLAW_DELTA_Z>
+
+    <!-- 上下层乒乓球在像素平面上的水平分界线 -->
+    <SIGHT_MIDDLE>175</SIGHT_MIDDLE>
+    <EDIT>0</EDIT>
+
+</opencv_storage>
